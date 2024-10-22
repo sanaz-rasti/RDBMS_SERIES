@@ -1,0 +1,43 @@
+<!-- insert data into persons table in database. The aformentioned table has schema of [standardized_clinical_data].-->
+
+<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippets xmlns='SpecifiedName'>
+	<CodeSnippets Format='1.0.0'>
+		<Header>
+			<Title> Insert code into table</Title>
+		</Header>
+		<Snippet>
+			<Code Language = "T-SQL">
+				<query>
+					<![CDATA[
+						  DECLARE @xml XML;
+
+						  SET @xml = 
+						  N'<persons>
+							  <person>
+								  <user_id>1</user_id>
+								  <user_name>abc</user_name>
+								  <user_email>"abc@abc.com"</user_email>
+							  </person>
+							  <person>
+								  <user_id>2</user_id>
+								  <user_name>def</user_name>
+								  <user_email>"def@def.com"</user_email>
+							  </person>
+						  </persons>';
+
+						  INSERT INTO [standardized_clinical_data].[persons] 
+										([user_id] ,[user_name]
+										,[user_email])
+						  SELECT
+							persons.person.value('(user_id)[1]', 'INT'),
+							persons.person.value('(user_name)[1]', 'NVARCHAR(50)'),
+							persons.person.value('(user_email)[1]', 'NVARCHAR(50)'),
+
+						  FROM @xml.nodes('/persons/person') AS persons(person);
+					]]>
+				</query>
+			</code>
+		</Snippet>
+	</CodeSnippets>
+</CodeSnippets>
