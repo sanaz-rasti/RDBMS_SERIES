@@ -2,7 +2,7 @@
 ## Servers 
 ### 1. Localhost SQL Server, using the MS-SQL-Docker-Image  
 
-Run a local SQL server using Docker, given the fact that there is a  
+Run a local SQL server using Docker, given the fact that 
 - Have Docker installed
 - Pull MS SQL Server Docker Image: cmd --> docker pull mcr.microsoft.com/mssql/server 
 - Run the Image container, using port 1433:1433 : 
@@ -33,4 +33,16 @@ Aiming at using the Azure SQL Database service, a more successful setting would 
     
 
 
+
+
+### 3. Start data analytics within Azure Synapse Analytics
+In order to manage the database in synapse environment:
+    <br/> &emsp; - Create Synapse workspace > using the resource group that your database lies in. 
+    <br/> &emsp; - Built-in SQL pool is automatically created, with type: Serverless SQL database
+    <br/> &emsp; - Create Apache Spark Pool 
+    <br/> &emsp; - Open the Synapse workspace  
+    <br/> &emsp; - In workspace create new SQL database (+)
+    <br/> &emsp; - 
+    <br/> &emsp; - 
+    <br/> &emsp; - 
 
