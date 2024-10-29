@@ -41,8 +41,21 @@ In order to manage the database in synapse environment:
     <br/> &emsp; - Built-in SQL pool is automatically created, with type: Serverless SQL database
     <br/> &emsp; - Create Apache Spark Pool 
     <br/> &emsp; - Open the Synapse workspace  
-    <br/> &emsp; - In workspace create new SQL database (+)
+    <br/> &emsp; - Overview tab: click on Workspace web URL  
+    <br/> &emsp; - in Synapse workspace create new SQL database (+) , called OMOP in my current works-space
+    <br/> &emsp; - Overview tab: use Serverless SQL endpoint 
+    <br/> &emsp; - Create External tables in Serverless SQL 
     <br/> &emsp; - 
-    <br/> &emsp; - 
-    <br/> &emsp; - 
+
+#### Synapse Security Setup:
+Access to MS Azure Synapse workspace can be controlled by: 
+<br/> &emsp; 1. Azure roles (Azure role-based access control)<a href="https://learn.microsoft.com/en-us/azure/role-based-access-control/overview"> Azure RBAC</a>. Good for resource management and access to data storage. Within each RBAC three principals need to be considered:
+<br/> &emsp; &emsp; a.  Security Principal 
+<br/> &emsp; &emsp; b.  Role Definition
+<br/> &emsp; &emsp; c.  Scope
+<br/> &emsp; 2. Azure Synapse roles: good for managing live access to code and execution. 
+<br/> &emsp; 3. SQL permissions: Manage Serverless SQL pool. Looking after the security of data plane access. Data plane refers to infrastructure that handles the actual data operations, such as querying, transforming, and storing data. 
+<br/> &emsp; 4. Git permissions
+
+
 
