@@ -41,12 +41,45 @@ FROM [SchX].[Table1]
 USE TestDB;
 GO
 
-SELECT *
-FROM [SchX].[col1] 
+SELECT [col1]
+FROM [SchX].[Table1] 
 WHERE [col2] = 'entity' 
 
 
+
 -- select a column(col1) from database(TestDB) > schema (SchX) > table(Table1), 
+-- remove duplicates
+-- filter results to include rows where col2 equals 'entity'
+-- count all the remaining rows
+USE TestDB;
+GO
+WITH cte_name AS (
+	SELECT
+		col1,
+		col2,
+		ROW_NUMBER() OVER (PARTITION BY col1 ORDER BY (SELECT NULL)) AS rn
+	FROM [SchX].[Table1] 
+)
+SELECT COUNT(*)
+FROM cte_name
+WHERE rn = 1 AND col2 = 'entity';
+
+
+-- select a column(col1) from database(TestDB) > schema (SchX) > table(Table1),
+-- find min and max values from the column
+-- return that as min_val, max_val
+USE TestDB;
+GO
+SELECT
+    MIN([NewColName]) AS min_val,
+    MAX([NewColName]) AS max_val
+FROM
+    (SELECT DISTINCT [col1]
+     FROM [SchX].[Table1] ) AS [NewColName];
+
+
+-- 
+-- 
 
 
 
