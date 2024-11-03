@@ -65,7 +65,7 @@ FROM cte_name
 WHERE rn = 1 AND col2 = 'entity';
 
 
--- select a column(col1) from database(TestDB) > schema (SchX) > table(Table1),
+-- select a column(col1) from database(TestDB) > schema (SchX) > table (Table1),
 -- find min and max values from the column
 -- return that as min_val, max_val
 USE TestDB;
@@ -75,11 +75,58 @@ SELECT
     MAX([NewColName]) AS max_val
 FROM
     (SELECT DISTINCT [col1]
-     FROM [SchX].[Table1] ) AS [NewColName];
+	FROM [SchX].[Table1] ) AS [NewColName];
 
 
+-- Database(TestDB) > schema (SchX) > table (Table1),
+-- CTE to report several columns for person_id with specific condition SpeX
+-- col1 = HbA1C, col2 = age, col3 = BMI, col4 = smoking_status
 -- 
--- 
+USE TestDB;
+GO
+
+WITH active_specific_condition AS (
+	SELECT
+		[col00],
+		[col01],
+		[col09]
+	FROM [SchX].[Table1]
+
+	-- AGE, BMI, SMOKER, DRINKER 
+	JOIN [SchZ].[Table3]
+	ON [SchX].[Table1].[PATIENT_ID] = [SchZ].[Table3].[PATIENT_ID] 
+
+	-- SpX
+	JOIN [SchY].[Table2]
+	ON [SchX].[Table1].[PATIENT_ID] = [SchY].[Table2].[PATIENT_ID] 
+
+	-- Filter Active Patients, Age >18 , specific_condition = SpX
+	WHERE [SchX].[Table1].[PATIENT_ID] = 'ACTIVE' AND [SchY].[Table2].[specific_condition] < 'SpX' AND [SchZ].[Table3].[AGE] > 18
+	GROUP BY [SchX].[Table1].[PATIENT_ID]
+),
+another_criteria AS (
+	SELECT 
+		[col88],
+		[col45],
+		[col33]
+	FROM ...
+	JOIN 
+	HAVING COUNT([SchX].[Table1].[visits]) > 1
+)
+SELECT 
+	[PATIENT_ID],
+	[col1],
+	[col2],
+	[col3],
+	[col4]
+FROM active_specific_condition
+UNION ALL 
+SELECT 
+	SUM ([col88]) AS sum_col88,
+	[col6],
+	[col7]
+FROM another_criteria;
+
 
 
 
