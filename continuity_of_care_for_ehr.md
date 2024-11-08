@@ -7,12 +7,17 @@ I am about to organise and gather **patient encounter data** over a 5-years peri
 <br/>- ni = number of visits per interval I, e.g. n1, n2, .., ni
 <br/>- coci_patient_visit = $\frac{\sum (ni.(ni-1)) }{N.(N-1)}$, Note: the $\frac{\sum (ni.(ni-1)) }{N.(N-1)}$ is a measure of concentration or continuity for a period of time, with intervals of n1,n2,..., ni
 
+ - Having a database called EHR_PRIMARY_DATA
+ - In which there is a table for consultation records called EHR_CONSULTS 
+ - columns: [patient_id], [practice_name], [consultation_date]
+ - Unique patients can be found on DISTINCT [patient_id], [practice_name]
+ - Looking at all the available information available with [consultation_date] > 2020
+ - calculate n1,n2,n3,n4 n5,coci for each patient 
 
-<br/> In the joined, filtered structured table - setting the expression PatientEncounter, having the information of unique_patientID, n1,n2,...,n5, coci_patient_visit. where:
 
 
-
-<br/>
-Next step:
-find COCI average for each period for all the patients
+The code can be found in src/query_repo.sql under section
+<br/>-- --------------------------------------
+<br/>--  	Continuity of Care 
+<br/>-- --------------------------------------
 

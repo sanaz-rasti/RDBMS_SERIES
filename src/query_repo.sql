@@ -135,6 +135,76 @@ FROM another_criteria;
 
 
 -- --------------------------------------
+--  	    Continuity of Care 
+-- --------------------------------------
+
+ --  In which there is a table for consultation records called EHR_CONSULTS 
+ --  columns: [patient_id], [practice_name], [consultation_date]
+ --  Unique patients can be found on DISTINCT [patient_id], [practice_name]
+ --  Looking at all the available information available with [consultation_date] > 2020
+ --  calculate n1,n2,n3,n4 n5,coci for each patient 
+-- database  = EHR_PRIMARY_DATA
+-- schema = [SchX]
+-- table =  [EHR_CONSULTS]
+-- columns: [patient_id], [practice_name], [consultation_date]
+
+-- -----
+
+WITH ValidConsultations AS (
+    SELECT *
+    FROM EHR_PRIMARY_DATA.[SchX].[EHR_CONSULTS]
+    WHERE [consultation_date] > 2020
+),
+UniquePatients AS (
+    SELECT DISTINCT [patient_id], [practice_name]
+    FROM ValidConsultations
+),
+ConsultationCounts AS (
+    SELECT
+        p.[patient_id] AS patientID,
+        p.[practice_name],
+        SUM(CASE WHEN c.[consultation_date] BETWEEN 2020 AND 2021 THEN 1 ELSE 0 END) AS n1,
+        SUM(CASE WHEN c.[consultation_date] BETWEEN 2021 AND 2022 THEN 1 ELSE 0 END) AS n2,
+        SUM(CASE WHEN c.[consultation_date] BETWEEN 2022 AND 2023 THEN 1 ELSE 0 END) AS n3,
+        SUM(CASE WHEN c.[consultation_date] BETWEEN 2023 AND 2024 THEN 1 ELSE 0 END) AS n4,
+        SUM(CASE WHEN c.[consultation_date] BETWEEN 2024 AND 2025 THEN 1 ELSE 0 END) AS n5,
+        CAST(SUM(CASE WHEN c.[consultation_date] BETWEEN 2020 AND 2025 THEN 1 ELSE 0 END) AS FLOAT) AS N
+    FROM UniquePatients p
+    JOIN ValidConsultations c ON p.[patient_id] = c.[patient_id] AND p.[practice_name] = c.[practice_name]
+    GROUP BY p.[patient_id], p.[practice_name]
+),
+ContinuityIndex AS (
+    SELECT 
+        patientID,
+        [practice_name],
+        n1,
+        n2,
+        n3,
+        n4,
+        n5,
+        N,
+        (CAST(n1 * (n1 - 1) AS FLOAT) + 
+         CAST(n2 * (n2 - 1) AS FLOAT) + 
+         CAST(n3 * (n3 - 1) AS FLOAT) + 
+         CAST(n4 * (n4 - 1) AS FLOAT) + 
+         CAST(n5 * (n5 - 1) AS FLOAT)) / NULLIF(N * (N - 1), 0) AS coci
+    FROM ConsultationCounts
+)
+SELECT 
+    patientID,
+    [practice_name],
+    n1,
+    n2,
+    n3,
+    n4,
+    n5,
+    coci
+FROM ContinuityIndex;
+
+
+
+
+-- --------------------------------------
 --  		INSERT STATEMENTS 
 -- --------------------------------------
 -- Insert data into tables in SSMS studio:
