@@ -243,6 +243,32 @@ SELECT *
 FROM VisitCounts;
 
 
+-- ---------------------------
+--      Text Processing
+-- ---------------------------
+
+-- dataset: EHR_PRIMARY_DATA
+-- Schema: [SchX]
+-- Table: [EHR_CONSULTS]
+-- Columns: [patient_id], [practice_name], [consultation_date], [text_column]
+
+
+SELECT 
+    [text_column],
+    CASE 
+        WHEN [text_column] LIKE '%Keyword1%' THEN 'Keyword1 found'
+        WHEN [text_column] LIKE '%Keyword2%' THEN 'Keyword2 found'
+        ELSE 'No Keyword Found'
+    END AS keyword_status 
+FROM 
+    [SchX].[EHR_CONSULTS];
+
+
+
+
+
+
+
 -- --------------------------------------
 --  		INSERT STATEMENTS 
 -- --------------------------------------
