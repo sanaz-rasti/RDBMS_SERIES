@@ -6,20 +6,27 @@
 
 
 
-
+-- --------------------------------
 -- List all Schemas in SQL Server Database 
 SELECT * from INFORMATION_SCHEMA.SCHEMATA;
 
 
+-- --------------------------------
 -- Do we need clustered/Nonclustered indexes on tables ?
 CREATE NONCLUSTERED INDEX indx_col_name ON TableName (tablename);
 
 
+-- --------------------------------
 -- Taking care of Authentication, Authorization and Encryption for data protection:
 
 
 
-
+-- --------------------------------
+-- database volume
+SELECT 
+    SUM(used_page_count) * 8.0 / 1024 AS UsedStorageInGB
+FROM 
+    sys.dm_pdw_nodes_db_partition_stats;
 
 
 
@@ -35,6 +42,8 @@ SELECT [col1]
 FROM [SchX].[Table1] 
 
 
+
+-- --------------------------------
 -- select a column(col1) from database(TestDB) > schema (SchX) > table(Table1), 
 -- filter results to only include rows where column(col2) equals 'entity'
 -- id est: retrieve all info about col1 with specified 'entity' in col2
@@ -46,7 +55,7 @@ FROM [SchX].[Table1]
 WHERE [col2] = 'entity' 
 
 
-
+-- --------------------------------
 -- select a column(col1) from database(TestDB) > schema (SchX) > table(Table1), 
 -- remove duplicates
 -- filter results to include rows where col2 equals 'entity'
@@ -64,7 +73,7 @@ SELECT COUNT(*)
 FROM cte_name
 WHERE rn = 1 AND col2 = 'entity';
 
-
+-- --------------------------------
 -- select a column(col1) from database(TestDB) > schema (SchX) > table (Table1),
 -- find min and max values from the column
 -- return that as min_val, max_val
@@ -77,7 +86,7 @@ FROM
     (SELECT DISTINCT [col1]
 	FROM [SchX].[Table1] ) AS [NewColName];
 
-
+-- --------------------------------
 -- Database(TestDB) > schema (SchX) > table (Table1),
 -- CTE to report several columns for person_id with specific condition SpeX
 -- col1 = HbA1C, col2 = age, col3 = BMI, col4 = smoking_status
@@ -137,23 +146,19 @@ FROM another_criteria;
 -- --------------------------------------
 --  	    Continuity of Care 
 -- --------------------------------------
-
- --  In which there is a table for consultation records called EHR_CONSULTS 
- --  columns: [patient_id], [practice_name], [consultation_date]
- --  Unique patients can be found on DISTINCT [patient_id], [practice_name]
- --  Looking at all the available information available with [consultation_date] > 2020
- --  calculate n1,n2,n3,n4 n5,coci for each patient 
+--  The EHR database in which there is a table for consultation records called EHR_CONSULTS 
+--  Unique patients can be found on DISTINCT [patient_id], [practice_name]
+--  Looking at all the available information available with [consultation_date] > 2020
+--  calculate n1,n2,n3,n4 n5,coci for each patient 
 -- database  = EHR_PRIMARY_DATA
 -- schema = [SchX]
 -- table =  [EHR_CONSULTS]
 -- columns: [patient_id], [practice_name], [consultation_date]
 
--- -----
-
 WITH ValidConsultations AS (
     SELECT *
     FROM EHR_PRIMARY_DATA.[SchX].[EHR_CONSULTS]
-    WHERE [consultation_date] > 2020
+    WHERE [consultation_date] >= 2020
 ),
 UniquePatients AS (
     SELECT DISTINCT [patient_id], [practice_name]
@@ -202,6 +207,40 @@ SELECT
 FROM ContinuityIndex;
 
 
+-- -----------------------------------------------------------
+--      Count of Patient Records on Frequency of Visits 
+-- -----------------------------------------------------------
+-- We define Frequency of Visits as the Count of Valid Patient Recordings during the year. 
+-- The stats are driven for Counts of Patients for +1visits, +2visits, ...  
+-- Setting search criteria for the last five years where [consultation_date] >= 2020,(year 2020 to 2024)
+-- Unique patient records can be found on distinct [patient_id], [practice_name]
+-- dataset: EHR_PRIMARY_DATA
+-- Schema: [SchX]
+-- Table: [EHR_CONSULTS]
+-- Columns: [patient_id], [practice_name], [consultation_date]
+-- Succeedingly the result can be plotted using Python 
+
+WITH UniquePatients AS (
+    SELECT 
+        [practice_name], 
+        [patient_id],
+        COUNT(consultation_date) AS cnt
+    FROM EHR_PRIMARY_DATA.[SchX].[EHR_CONSULTS]
+    WHERE [consultation_date] >= 2020
+    GROUP BY [practice_name], [patient_id]
+),
+VisitCounts AS (
+    SELECT
+        SUM(CASE WHEN cnt >= 1 THEN 1 ELSE 0 END) AS '+1visit',
+        SUM(CASE WHEN cnt >= 2 THEN 1 ELSE 0 END) AS '+2visit',
+        SUM(CASE WHEN cnt >= 3 THEN 1 ELSE 0 END) AS '+3visit',
+        SUM(CASE WHEN cnt >= 4 THEN 1 ELSE 0 END) AS '+4visit',
+        SUM(CASE WHEN cnt >= 4 THEN 1 ELSE 0 END) AS '+5visit'
+
+    FROM UniquePatients
+)
+SELECT *
+FROM VisitCounts;
 
 
 -- --------------------------------------
