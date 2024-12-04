@@ -109,7 +109,7 @@ WITH active_specific_condition AS (
 	JOIN [SchY].[Table2]
 	ON [SchX].[Table1].[PATIENT_ID] = [SchY].[Table2].[PATIENT_ID] 
 
-	-- Filter Active Patients, Age >18 , specific_condition = SpX
+	-- Filter Active Patients, col_age>18 , specific_condition = SpX
 	WHERE [SchX].[Table1].[PATIENT_ID] = 'ACTIVE' AND [SchY].[Table2].[specific_condition] < 'SpX' AND [SchZ].[Table3].[AGE] > 18
 	GROUP BY [SchX].[Table1].[PATIENT_ID]
 ),
@@ -138,9 +138,103 @@ FROM another_criteria;
 
 
 
+-- --------------------------------------
+--  	    Population Studies
+-- --------------------------------------
+-- Looking for Registered patients during a certain time 
+-- Record on Population, Gender, col_age
+-- Year 2023
+-- Database(TestDB) > schema (SchX) > table (Table1),
+WITH UPRWRD AS ( -- UPRecordsWithRegistrationDate 
+    SELECT 
+        [col1], 
+        [cool2], 
+        [col_Status],
+        [col_Gender],
+        [col_AGE],
+        [col_REGISTRATION_DATE],
+        [col_DEREGISTRATION_DATE]
+    FROM [SchX].[Table1]
+    WHERE col_REGISTRATION_DATE IS NOT NULL AND col_REGISTRATION_DATE !=''
+
+), UPRSY AS ( --  UPRecordsRegisteredStartOfYear(those registered)
+    SELECT * 
+    FROM UPRWRD
+    WHERE col_REGISTRATION_DATE < '2023-01-01T00:00:00.000' 
+    AND col_REGISTRATION_DATE >= '2000-01-01T00:00:00.000'
+
+), UPRSYDER AS ( --  UPRecordsDeregisteredEndOfYear(those deregistered)
+    SELECT * 
+    FROM UPRSY
+    WHERE col_DEREGISTRATION_DATE < '2024-01-01T00:00:00.000' 
+    AND col_DEREGISTRATION_DATE >= '2000-01-01T00:00:00.000'
+    AND col_DEREGISTRATION_DATE IS NOT NULL 
+
+), UPRSYRNOTDER AS ( --  UPRegisteredNOTDerStartOfYearAndAlive(those NOT deregistered)
+    SELECT 
+        U.* 
+    FROM 
+        UPRSY U
+    LEFT JOIN 
+        UPRSYDER UR ON U.col1= UR.col1 AND U.col2 = UR.col2
+    WHERE 
+        UR.col1 IS NULL 
+        AND UR.col2 IS NULL
+        AND U.[col_Status] != 'DEAD'
+
+)
+SELECT 
+    COUNT(DISTINCT CONCAT(col1, '|' ,col2)) AS UPC,
+    -- Male
+    COUNT(DISTINCT CASE 
+                WHEN col_Gender = 'Male' OR col_gender = 'M' 
+                THEN CONCAT([col1], '|', [col2]) END) AS UPCMale,
+
+    -- Female
+    COUNT(DISTINCT CASE 
+                WHEN col_gender = 'Female' OR col_gender = 'F' 
+                THEN CONCAT([col1], '|', [col2]) END) AS UPCFemale,
+
+    -- GenderMissing
+    COUNT(DISTINCT CASE 
+                    WHEN col_gender IS NULL OR col_gender = ''
+                    THEN CONCAT([col1], '|', [col2]) END) AS UPCGenderMissing,
 
 
+    -- AgeRange018
+    COUNT(DISTINCT 
+            CASE 
+                WHEN col_age >= 0 
+                AND col_age <= 18
+                THEN CONCAT([col1], '|', [col2]) 
+            END) AS AGERANGE018, 
 
+
+    -- AgeRange1965
+    COUNT(DISTINCT 
+            CASE 
+                WHEN col_age >= 19 
+                AND col_age <= 65
+                THEN CONCAT([col1], '|', [col2]) 
+            END) AS AGERANGE1865, 
+
+
+    -- AgeRange65
+    COUNT(DISTINCT 
+            CASE 
+                WHEN col_age >= 66 
+                THEN CONCAT([col1], '|', [col2]) 
+            END) AS AGERANGE65Plus,
+
+
+    -- AgeMissing
+    COUNT(DISTINCT 
+            CASE 
+                WHEN col_age IS NULL 
+                THEN CONCAT([col1], '|', [col2]) 
+            END) AS AGEMissing
+
+FROM UPRSYRNOTDER
 
 
 -- --------------------------------------
